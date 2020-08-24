@@ -1,0 +1,87 @@
+#include <stdio.h>
+
+#define MAXLINE 1000 /* maximum input line size */
+#define RETURNEOF -1 /* getline return value when it encounters EOF - see comment inline below*/
+
+int getline(char line[], int maxline);
+void printLine(char line[], int length);
+void reverseLine(char line[], char rline[]);
+
+int main()
+{
+	int len; /* current line length */
+	
+	char line[MAXLINE]; /* current input line */
+	char rline[MAXLINE]; /* Reversed input line */
+
+	while ((len = getline(line, MAXLINE)) != RETURNEOF)
+		if (len > 0) {
+			printf("Line: \n");
+			printLine(line, len);
+			reverseLine(line, rline);
+			printf("Reversed: \n");
+			printLine(rline, len);
+		}
+		else 
+			printf("Line was all whitespace\n");
+	return 0;
+}
+
+/* getline: read a line into s, return length*/
+int getline(char s[], int lim)
+{
+	int c, i;
+	int lc = -1; /* last character in line that was not whitespace */
+
+	for (i = 0; i < lim - 1 && (c = getchar()) != EOF && c != '\n'; ++i) {
+		s[i] = c;
+		if (c != '\t' && c != ' ')
+			lc = i;
+	}
+
+	if (c == EOF) /* Added so the program would exit (using VS on Windows) by pressing CTRL+Z */
+		return RETURNEOF;
+
+	if (c == '\n') {
+		s[i] = c;
+		++i;
+	}
+
+	if (lc == -1) /* no non-whitespace characters before eol */
+		return 0;
+	else if (lc == i - 2) { /* no 'trimming' needed */
+		s[i] = '\0';
+		return i;
+	}
+	else /* 'trimming' needed. Bring in EOL and string terminator to 1 index past last character*/
+		s[lc + 1] = '\n';
+		s[lc + 2] = '\0';
+		return lc + 2;
+}
+
+void printLine(char s[], int l)
+{
+	printf("Line (%d): %s\n", l, s);
+}
+
+/* Reverse the characters in the line*/
+void reverseLine(char l[], char rl[])
+{
+	/* scan line to find first occurence of '\0' */
+	int search = 1;
+	int lastc = -1; /* will be set to the '\0' of the line*/
+	int j = 0;
+
+	for (int i = 0; i < MAXLINE && search == 1; ++i)
+		if (l[i] == '\0') { /* Assuming indices are cccc'\n''\o'*/
+			search = 0;
+			lastc = i;
+		}
+	
+	for (int i = lastc - 2; i >= 0; --i) {
+		rl[j] = l[i];
+		++j;
+	}
+	rl[j] = '\n'; /* Add the new line and string terminator to the end*/
+	rl[j + 1] = '\0';
+}
