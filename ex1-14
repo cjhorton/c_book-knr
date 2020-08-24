@@ -1,0 +1,45 @@
+#include <stdio.h>
+
+/*This solution will only handle the 95 ASCII characters 32 through 126*/
+
+#define MINCHAR 32 /*Lowest char dex value - 32 = 'Space'*/
+#define MAXCHAR 126 /*Highest char dec value = 126 = '~' */
+#define NC 97 /*((MAXCHAR - MINCHAR) + 1 + 2) - 2 are for \t and \n*/
+
+main()
+{
+	int c = 0;
+
+	long characters[NC]; /*\t will be at next to last index, \n will be at last index*/
+
+	/*Initialize the array*/
+	for (int i = 0; i < NC; ++i)
+		characters[i] = 0;
+
+	/*grab each character from input and bin into characters array*/
+	while((c = getchar()) != EOF){
+		if (c >= MINCHAR && c <= MAXCHAR)
+			++characters[c - MINCHAR];
+		else if (c == '\t')
+			++characters[NC - 2];
+		else if (c == '\n')
+			++characters[NC - 1];
+	}
+
+	/*Draw Histogram as cc |n |:___*/
+	/*Formatting gets ugly at large n values*/
+	for (int i = 0; i < NC; ++i) {
+		if (i < NC - 2)
+			printf("%2c |%-2d|: ", i + MINCHAR, characters[i]);
+
+		else if (i == NC - 2)
+			printf("\\t |%-2d|: ", characters[NC - 2]);
+
+		else if (i == NC - 1)
+			printf("\\n |%-2d|: ", characters[NC - 1]);
+
+		for (int j = 0; j < characters[i]; ++j)
+			putchar('_');
+		printf("\n");	
+	}
+}
