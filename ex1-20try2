@@ -64,7 +64,7 @@ void detab()
 	extern char modLine[];
 
 	j = 0;
-	for (i = 0; i < MAXLINE - 1 && rawLine != '\n'; ++i) {
+	for (i = 0; i < MAXLINE - 1 && rawLine[i] != '\n'; ++i) {
 		if (rawLine[i] != '\t') {
 			modLine[j] = rawLine[i];
 			if (loc == TAB_STOP_NUM - 1)
