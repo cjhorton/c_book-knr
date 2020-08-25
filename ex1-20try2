@@ -1,0 +1,94 @@
+#include <stdio.h>
+#define MAXLINE 1000 /* Max number of c haracters in a line */
+#define RC ' ' /* character to replace tabs with*/
+#define TAB_STOP_NUM 8 /* how many spaces are between tab stops*/
+
+char rawLine[MAXLINE];
+char modLine[MAXLINE];
+
+int main()
+{
+
+	int length = 0;
+	extern char rawLine[];
+	extern char modLine[];
+	int GetLine();
+	void ReplaceTabs();
+	void detab(void);
+
+	
+	while ((length = GetLine()) > 0)
+		if (length > 0) {
+			//ReplaceTabs();
+			detab();
+			printf("Original:\n");
+			printf("%s", rawLine);
+			printf("Modified:\n");
+			printf("%s", modLine);
+		}
+	return 0;
+}
+
+int GetLine()
+{
+	int c, i;
+	extern char rawLine[];
+	extern char modLine[];
+
+	/* flush out lines*/
+	for (i = 0; i < MAXLINE; ++i) {
+		rawLine[i] = ' ';
+		modLine[i] = ' ';
+	}
+
+	/* MAXLINE - 1 since adding string terminator on the end */
+	for (i = 0; i < MAXLINE - 1 && (c = getchar()) != EOF && c != '\n'; ++i)
+		rawLine[i] = c;
+	if (c == '\n') {
+		rawLine[i] = c;
+		++i;
+	}
+	rawLine[i] = '\0';
+	return i;
+
+}
+
+void detab()
+{
+
+	int loc = 0; /* location in current tab stop*/
+	int adv = 0; /* # spaces to advance to bring to next tab stop*/
+
+	int i, j, s;
+	extern char rawLine[];
+	extern char modLine[];
+
+	j = 0;
+	for (i = 0; i < MAXLINE - 1 && rawLine != '\n'; ++i) {
+		if (rawLine[i] != '\t') {
+			modLine[j] = rawLine[i];
+			if (loc == TAB_STOP_NUM - 1)
+				loc = 0;
+			else
+				++loc;
+			++j;
+		} 
+		else {
+			adv = TAB_STOP_NUM - loc;
+			for (s = 0; s < adv; ++s) {
+				modLine[j] = RC;
+				++j;
+				
+
+				if (loc == TAB_STOP_NUM - 1)
+					loc = 0;
+				else
+					++loc;
+			}
+		}
+	}
+	if (rawLine[i] == '\n') {
+		modLine[j] = '\n';
+		modLine[j + 1] = '\0';
+	}
+}
