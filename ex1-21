@@ -1,0 +1,175 @@
+#include <stdio.h>
+#define MAXLINE 1000 /* Max number of c haracters in a line */
+#define TABN 8 /* how many spaces are between tab stops*/
+#define TRUE 1
+#define FALSE 0
+
+char rawLine[MAXLINE];
+char modLine[MAXLINE];
+
+int main()
+{
+	int length;
+	extern char rawLine[];
+	extern char modLine[];
+	int GetLine();
+	void entab();
+		
+	while ((length = GetLine()) > 0)
+		if (length > 0) {
+			entab();
+			printf("Original:\n");
+			printf("%s", rawLine);
+			printf("Modified:\n");
+			printf("%s", modLine);
+		}
+	return 0;
+}
+
+int GetLine()
+{
+	int c, i;
+	extern char rawLine[];
+	extern char modLine[];
+
+	/* flush out lines*/
+	for (i = 0; i < MAXLINE; ++i) {
+		rawLine[i] = '-';
+		modLine[i] = '-';
+	}
+
+	/* MAXLINE - 1 since adding string terminator on the end */
+	for (i = 0; i < MAXLINE - 1 && (c = getchar()) != EOF && c != '\n'; ++i)
+		rawLine[i] = c;
+	if (c == '\n') {
+		rawLine[i] = c;
+		++i;
+	}
+	rawLine[i] = '\0';
+	return i;
+
+}
+
+void entab()
+{
+	extern char rawLine[];
+	extern char modLine[];
+	int DetNumConBlanks(char l[], int s);
+	int SpacesToNextStop(int chp);
+
+	int li = 0; /* line index - update for loop with this each pass through the while*/
+	int chp = 0; /* current horizontal position we are emulating */
+
+	int process = TRUE; 
+	int handleBlanks = FALSE; /* in a string (>1) of blanks */
+	int numBlanks = 0;
+	int numTabs = 0;
+
+	int i, j; /* j is index of modLine[]*/
+
+	j = 0;
+	
+	while (process == TRUE) {
+		for (i = li; i < MAXLINE - 1 && rawLine[i] != '\n' && handleBlanks == FALSE; ++i) {
+			if (rawLine[i] == ' ') {
+				numBlanks = DetNumConBlanks(rawLine, i);
+				if (numBlanks > 1) {
+					handleBlanks = TRUE;
+					li = li + numBlanks;
+					/* update chp below for these*/
+				}
+				else {
+					modLine[j] = ' ';
+					++li;
+					++chp;
+					++j;
+				}
+			}
+			else {
+				if (rawLine[i] != '\t') {
+					modLine[j] = rawLine[i];
+					++chp;
+					++j;
+				}
+				else {
+					modLine[j] = '\t';
+					chp = chp + SpacesToNextStop(chp);
+					++j;
+				}
+				++li;
+			}
+		}
+
+		if (handleBlanks == TRUE) {
+			/* determine if enough blanks to advance from chp to next tab stop.  If so see if can advance additional stops*/
+			int n = SpacesToNextStop(chp);
+			int t = 0; /* intermediate variable*/
+
+			chp = chp + numBlanks; /* update this here so it doesn't throw off the SpacesToNextStop*/
+
+			/* get to next tab stop if possible. Only place tabs if > 1 space, otherwise place space*/
+			
+			if (n > 1 && numBlanks >= n) {
+				++numTabs;
+				numBlanks = numBlanks - n;
+			}
+
+			/* swap tabs for the spaces if possible*/
+			numTabs = numTabs + (numBlanks / TABN);
+			t = (numBlanks / TABN);
+			numBlanks = numBlanks - (t * TABN);
+
+			/* add tabs*/
+			for (i = 0; i < numTabs; ++i) {
+				modLine[j] = '\t';
+				++j;
+			}
+
+			/* add spaces */
+			for (i = 0; i < numBlanks; ++i) {
+				modLine[j] = ' ';
+				++j;
+			}
+
+			handleBlanks = FALSE;
+		}
+		numBlanks = 0;
+		numTabs = 0;
+
+		if (rawLine[li] == '\n') {
+			modLine[j] = '\n';
+			modLine[j + 1] = '\0';
+			process = FALSE;
+		}
+	}
+}
+/* Determines the number of consecutive ' ' from (inclusive) s
+	Assumes s is >= 0*/
+int DetNumConBlanks(char l[], int s)
+{
+	int n, c;/* n- number of consecutive ' ' starting at s; c - flag to keep loop going*/
+	n = 0;
+	c = TRUE;
+	for (; s < MAXLINE - 1 && c == TRUE; ++s)
+		if (l[s] == ' ')
+			++n;
+		else
+			c = FALSE;
+	return n;
+}
+
+/* horizontal position this character brought the previous horizontal position to*/
+int DetHorzPos(int chp, char c)
+{
+	if (c != '\t')
+		return chp + 1;
+	else
+		/* Credit to John Kugelman - https://stackoverflow.com/questions/13094690/how-many-spaces-for-tab-character-t */
+		return (((chp + TABN) / TABN) * TABN);
+}
+
+/* how many spaces would need to be added to bring the current horizontal pos to the next tab stop*/
+int SpacesToNextStop(int chp)
+{
+	return (((chp + TABN) / TABN) * TABN) - chp;
+}
